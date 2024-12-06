@@ -1,3 +1,5 @@
+cv2
+opencv-python-headless
 streamlit
 Pillow
 google-generativeai
