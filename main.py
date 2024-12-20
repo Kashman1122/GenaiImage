@@ -61,92 +61,97 @@ model = genai.GenerativeModel("gemini-1.5-flash")
 
 # Function to generate AI responses
 def get_data(question, image=None):
-    if question and image:
-        response = model.generate_content([question, image])
-        return response.text
-    elif question:
-        response = model.generate_content(question)
-        return response.text
-    return "No response"
+    try:
+        if question and image:
+            response = model.generate_content([question, image])
+            return response.text
+        elif question:
+            response = model.generate_content(question)
+            return response.text
+    except Exception as e:
+        return f"Error: {str(e)}"
+    return "No response."
 
 # Streamlit page configuration
 st.set_page_config(page_title="AI Chat Assistant", layout="wide")
 st.markdown(
     """
     <style>
-       body {
-  margin: 0;
-  padding: 0;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #121212;
-  color: white;
-  font-family: Arial, sans-serif;
-}
-
-.chat-container {
-  width: 80%;
-  max-width: 800px;
-  height: 90vh;
-  display: flex;
-  flex-direction: column;
-  background-color: #1e1e1e;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.chat-messages {
-  flex: 1;
-  padding: 10px;
-  overflow-y: auto;
-}
-
-.chat-input-area {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px;
-  background-color: #2c2c2c;
-}
-
-.chat-input {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-  margin-right: 10px;
-  font-size: 16px;
-}
-
-.camera-button, .send-button {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.camera-button {
-  background-color: #4caf50;
-  color: white;
-  margin-right: 5px;
-}
-
-.send-button {
-  background-color: #2196f3;
-  color: white;
-}
-
-.chat-input-area .camera-button:hover {
-  background-color: #45a049;
-}
-
-.chat-input-area .send-button:hover {
-  background-color: #0b7dda;
-}
-
+    body {
+        background-color: #121212;
+        color: white;
+        font-family: Arial, sans-serif;
+    }
+    .chat-container {
+        width: 80%;
+        max-width: 800px;
+        height: 90vh;
+        margin: auto;
+        display: flex;
+        flex-direction: column;
+        background-color: #1e1e1e;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .chat-messages {
+        flex: 1;
+        padding: 10px;
+        overflow-y: auto;
+    }
+    .chat-bubble-user, .chat-bubble-ai {
+        padding: 10px;
+        margin: 5px;
+        border-radius: 10px;
+        max-width: 75%;
+    }
+    .chat-bubble-user {
+        background-color: #4caf50;
+        color: white;
+        align-self: flex-end;
+    }
+    .chat-bubble-ai {
+        background-color: #444;
+        color: white;
+        align-self: flex-start;
+    }
+    .chat-input-area {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px;
+        background-color: #2c2c2c;
+    }
+    .chat-input {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        margin-right: 10px;
+        font-size: 16px;
+        color: white;
+        background-color: #1e1e1e;
+    }
+    .camera-button, .send-button {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        color: white;
+    }
+    .camera-button {
+        background-color: #4caf50;
+        margin-right: 5px;
+    }
+    .send-button {
+        background-color: #2196f3;
+    }
+    .camera-button:hover {
+        background-color: #45a049;
+    }
+    .send-button:hover {
+        background-color: #0b7dda;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -156,46 +161,51 @@ st.markdown(
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+if "camera_active" not in st.session_state:
+    st.session_state.camera_active = False
+
+if "captured_image" not in st.session_state:
+    st.session_state.captured_image = None
+
 st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
 
 # Display chat messages
+st.markdown("<div class='chat-messages'>", unsafe_allow_html=True)
 for msg in st.session_state.messages:
     if msg["is_user"]:
         st.markdown(f"<div class='chat-bubble-user'>{msg['content']}</div>", unsafe_allow_html=True)
     else:
         st.markdown(f"<div class='chat-bubble-ai'>{msg['content']}</div>", unsafe_allow_html=True)
-
 st.markdown("</div>", unsafe_allow_html=True)
 
-# Camera toggle logic
-if "camera_active" not in st.session_state:
-    st.session_state.camera_active = False
-
-# Camera Button Handling
+# Camera functionality
 if st.session_state.camera_active:
-    camera_image = st.camera_input("Capture an image", label_visibility="collapsed")
+    st.session_state.captured_image = st.camera_input("Capture an image", label_visibility="collapsed")
 else:
-    camera_image = None
+    st.session_state.captured_image = None
 
 # Input area
-user_input = st.text_input("Type your message...", key="text_input", label_visibility="collapsed")
-
-# Buttons for actions
-col1, col2, col3 = st.columns([2, 1, 1])
+col1, col2, col3 = st.columns([8, 1, 1])
+with col1:
+    user_input = st.text_input("Type your message...", key="text_input", label_visibility="collapsed")
 with col2:
     if st.button("📷 Open Camera"):
         st.session_state.camera_active = not st.session_state.camera_active
 with col3:
     if st.button("➤ Send"):
         if user_input.strip():
+            # Add user message to session
             st.session_state.messages.append({"is_user": True, "content": user_input})
-            image = None
 
-            if camera_image:
-                image = Image.open(camera_image)
+            # Prepare image if captured
+            image = None
+            if st.session_state.captured_image:
+                image = Image.open(st.session_state.captured_image)
 
             # Get AI response
             ai_response = get_data(user_input, image)
             st.session_state.messages.append({"is_user": False, "content": ai_response})
         else:
             st.warning("Please enter a message.")
+
+st.markdown("</div>", unsafe_allow_html=True)
