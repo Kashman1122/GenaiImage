@@ -65,7 +65,7 @@ def get_data(question, image=None):
         response = model.generate_content([question, image])
         return response.text
     elif question:
-        response = model.generate_text(question)
+        response = model.generate_content(question)
         return response.text
     return "No response"
 
