@@ -75,21 +75,21 @@ st.markdown(
     """
     <style>
         body {
-            background-color: #1e1e1e;
+            background-color: #121212;
             color: white;
         }
         .chat-container {
-            background-color: #2e2e2e;
+            background-color: #1e1e1e;
             border-radius: 10px;
             padding: 15px;
-            margin-bottom: 10px;
+            max-height: 500px;
             overflow-y: auto;
-            max-height: 400px;
+            margin-bottom: 20px;
         }
         .chat-bubble-user {
             text-align: right;
-            color: #000;
             background-color: #4caf50;
+            color: white;
             display: inline-block;
             padding: 10px;
             border-radius: 15px;
@@ -98,8 +98,8 @@ st.markdown(
         }
         .chat-bubble-ai {
             text-align: left;
-            color: #000;
-            background-color: #f0f0f0;
+            background-color: #444;
+            color: white;
             display: inline-block;
             padding: 10px;
             border-radius: 15px;
@@ -108,43 +108,50 @@ st.markdown(
         }
         .input-container {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            background-color: #3e3e3e;
+            position: fixed;
+            bottom: 10px;
+            width: 100%;
+            padding: 10px;
+            background-color: #1e1e1e;
             border-radius: 10px;
-            padding: 5px 10px;
         }
-        .input-container input {
+        .input-box {
             flex-grow: 1;
+            padding: 10px;
             border: none;
-            background-color: transparent;
+            background-color: #333;
             color: white;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        .input-box:focus {
             outline: none;
         }
-        .input-container button {
+        .send-button, .camera-button {
             border: none;
             background-color: #4caf50;
             color: white;
             border-radius: 50%;
-            padding: 8px;
+            padding: 10px;
             cursor: pointer;
         }
-        .camera-icon {
-            margin-left: 10px;
-            cursor: pointer;
+        .hidden-camera {
+            display: none;
         }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-st.title("💬 AI Assistant: Dark Mode Chat")
+# Title
+st.title("💬 AI Assistant - Dark Mode")
 
-# Initialize session state for chat messages
+# Chat history container
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Chat history container
 st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
 
 for msg in st.session_state.messages:
@@ -155,29 +162,62 @@ for msg in st.session_state.messages:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# Input area with camera icon
-uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
-camera_image = st.camera_input("Capture an image", label_visibility="collapsed")
+# Camera toggle logic
+if "camera_active" not in st.session_state:
+    st.session_state.camera_active = False
 
+if st.session_state.camera_active:
+    camera_image = st.camera_input("Capture an image", label_visibility="collapsed")
+else:
+    camera_image = None
+
+# Input box
 st.markdown(
     """
     <div class="input-container">
-        <input id="text_input" type="text" placeholder="Type your message here..." />
-        <img src="https://img.icons8.com/material-outlined/24/ffffff/camera.png" class="camera-icon" />
-        <button id="send_button">➤</button>
+        <input id="text_input" class="input-box" type="text" placeholder="Type your message..." />
+        <button class="camera-button" onclick="toggleCamera()">📷</button>
+        <button class="send-button" onclick="sendMessage()">➤</button>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-# Process input
+# JavaScript for camera toggle and sending a message
+st.markdown(
+    """
+    <script>
+        let cameraActive = false;
+
+        function toggleCamera() {
+            cameraActive = !cameraActive;
+            const camera = document.querySelector('.hidden-camera');
+            if (camera) {
+                camera.style.display = cameraActive ? 'block' : 'none';
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('text_input');
+            if (input.value.trim() !== "") {
+                document.querySelector('button[type="submit"]').click();
+            }
+        }
+    </script>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Input handling
+user_input = st.text_input("Enter your message:", key="text_input", label_visibility="collapsed")
+uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
+
 if st.button("Send"):
-    user_input = st.text_input("Enter your message:", "", key="text_input", label_visibility="collapsed")
     if user_input.strip():
         st.session_state.messages.append({"is_user": True, "content": user_input})
+        image = None
 
         # Handle image input
-        image = None
         if camera_image:
             image = Image.open(camera_image)
         elif uploaded_image:
