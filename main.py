@@ -56,12 +56,12 @@ from dotenv import load_dotenv
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-# Initialize the models
+# Initialize the model
 model = genai.GenerativeModel("gemini-1.5-flash")
 
-# Function to get response from model
+# Function to generate a response
 def get_data(question, image=None):
-    if question and image is not None:
+    if question and image:
         response = model.generate_content([question, image])
         return response.text
     elif question:
@@ -70,36 +70,37 @@ def get_data(question, image=None):
     return "No response"
 
 # Streamlit UI
-st.title("AI Assistant with Image and Chat Support")
+st.set_page_config(page_title="AI Assistant", layout="wide")
+st.title("🧠 AI Assistant: Chat & Image Analysis")
 
-# Chat message container
+# Initialize session state for chat messages
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display chat messages
+# Chat display container
+st.markdown("<div style='height:500px; overflow-y:scroll; padding:10px; border:1px solid #ccc; border-radius:10px;'>", unsafe_allow_html=True)
+
 for msg in st.session_state.messages:
     if msg["is_user"]:
         st.markdown(
-            f'<div style="text-align:right; background-color:#DCF8C6; padding:8px; border-radius:8px; margin:4px 0;">'
-            f'<strong>You:</strong> {msg["content"]}</div>',
+            f"<div style='text-align:right;'><span style='display:inline-block; background-color:#DCF8C6; padding:10px; border-radius:15px; margin:5px; max-width:70%;'>{msg['content']}</span></div>",
             unsafe_allow_html=True,
         )
     else:
         st.markdown(
-            f'<div style="text-align:left; background-color:#F0F0F0; padding:8px; border-radius:8px; margin:4px 0;">'
-            f'<strong>AI:</strong> {msg["content"]}</div>',
+            f"<div style='text-align:left;'><span style='display:inline-block; background-color:#F0F0F0; padding:10px; border-radius:15px; margin:5px; max-width:70%;'>{msg['content']}</span></div>",
             unsafe_allow_html=True,
         )
 
-# Image uploader
-uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"], key="file_upload")
+st.markdown("</div>", unsafe_allow_html=True)
 
-# Camera input (supports Android devices)
-camera_image = st.camera_input("Capture an image using your camera", key="camera_input")
+# Image upload and camera capture
+uploaded_image = st.file_uploader("Upload an image (optional)", type=["jpg", "jpeg", "png"])
+camera_image = st.camera_input("Capture an image (optional)")
 
-# Input area at the bottom
-st.markdown("<div style='position:fixed; bottom:10px; width:100%;'>", unsafe_allow_html=True)
-input_col1, input_col2 = st.columns([4, 1])
+# Fixed input area
+st.markdown("<div style='position:fixed; bottom:10px; width:100%; background-color:white; padding:10px; border-top:1px solid #ccc;'>", unsafe_allow_html=True)
+input_col1, input_col2 = st.columns([5, 1])
 
 # Text input
 with input_col1:
@@ -107,19 +108,21 @@ with input_col1:
 
 # Send button
 with input_col2:
-    if st.button("Send"):
-        if user_input:
+    if st.button("Send", key="send_button"):
+        if user_input.strip():
+            # Add user message
             st.session_state.messages.append({"is_user": True, "content": user_input})
 
-            # Check if there's an image input
-            if uploaded_image or camera_image:
-                image = Image.open(uploaded_image or camera_image)
-                ai_response = get_data(user_input, image)
-            else:
-                ai_response = get_data(user_input)
+            # Check for image
+            image = None
+            if camera_image:
+                image = Image.open(camera_image)
+            elif uploaded_image:
+                image = Image.open(uploaded_image)
 
+            # Get AI response
+            ai_response = get_data(user_input, image)
             st.session_state.messages.append({"is_user": False, "content": ai_response})
-
         else:
             st.warning("Please enter a message.")
 
