@@ -59,7 +59,7 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 # Initialize the model
 model = genai.GenerativeModel("gemini-1.5-flash")
 
-# Function to generate a response
+# Function to generate AI responses
 def get_data(question, image=None):
     if question and image:
         response = model.generate_content([question, image])
@@ -69,8 +69,8 @@ def get_data(question, image=None):
         return response.text
     return "No response"
 
-# Streamlit UI Configuration
-st.set_page_config(page_title="AI Assistant", layout="wide")
+# Streamlit page configuration
+st.set_page_config(page_title="AI Chat Assistant", layout="wide")
 st.markdown(
     """
     <style>
@@ -82,7 +82,7 @@ st.markdown(
             background-color: #1e1e1e;
             border-radius: 10px;
             padding: 15px;
-            max-height: 500px;
+            max-height: 600px;
             overflow-y: auto;
             margin-bottom: 20px;
         }
@@ -129,31 +129,35 @@ st.markdown(
         .input-box:focus {
             outline: none;
         }
-        .send-button, .camera-button {
+        .send-button {
             border: none;
             background-color: #4caf50;
             color: white;
-            border-radius: 50%;
+            border-radius: 5px;
             padding: 10px;
             cursor: pointer;
         }
-        .hidden-camera {
-            display: none;
+        .camera-button {
+            border: none;
+            background-color: #444;
+            color: white;
+            border-radius: 5px;
+            padding: 10px;
+            cursor: pointer;
+            margin-left: 5px;
         }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# Title
-st.title("💬 AI Assistant - Dark Mode")
-
-# Chat history container
+# Chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
 
+# Display chat messages
 for msg in st.session_state.messages:
     if msg["is_user"]:
         st.markdown(f"<div class='chat-bubble-user'>{msg['content']}</div>", unsafe_allow_html=True)
@@ -166,65 +170,31 @@ st.markdown("</div>", unsafe_allow_html=True)
 if "camera_active" not in st.session_state:
     st.session_state.camera_active = False
 
+# Camera Button Handling
 if st.session_state.camera_active:
     camera_image = st.camera_input("Capture an image", label_visibility="collapsed")
 else:
     camera_image = None
 
-# Input box
-st.markdown(
-    """
-    <div class="input-container">
-        <input id="text_input" class="input-box" type="text" placeholder="Type your message..." />
-        <button class="camera-button" onclick="toggleCamera()">📷</button>
-        <button class="send-button" onclick="sendMessage()">➤</button>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+# Input area
+user_input = st.text_input("Type your message...", key="text_input", label_visibility="collapsed")
 
-# JavaScript for camera toggle and sending a message
-st.markdown(
-    """
-    <script>
-        let cameraActive = false;
+# Buttons for actions
+col1, col2, col3 = st.columns([2, 1, 1])
+with col2:
+    if st.button("📷 Open Camera"):
+        st.session_state.camera_active = not st.session_state.camera_active
+with col3:
+    if st.button("➤ Send"):
+        if user_input.strip():
+            st.session_state.messages.append({"is_user": True, "content": user_input})
+            image = None
 
-        function toggleCamera() {
-            cameraActive = !cameraActive;
-            const camera = document.querySelector('.hidden-camera');
-            if (camera) {
-                camera.style.display = cameraActive ? 'block' : 'none';
-            }
-        }
+            if camera_image:
+                image = Image.open(camera_image)
 
-        function sendMessage() {
-            const input = document.getElementById('text_input');
-            if (input.value.trim() !== "") {
-                document.querySelector('button[type="submit"]').click();
-            }
-        }
-    </script>
-    """,
-    unsafe_allow_html=True,
-)
-
-# Input handling
-user_input = st.text_input("Enter your message:", key="text_input", label_visibility="collapsed")
-uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
-
-if st.button("Send"):
-    if user_input.strip():
-        st.session_state.messages.append({"is_user": True, "content": user_input})
-        image = None
-
-        # Handle image input
-        if camera_image:
-            image = Image.open(camera_image)
-        elif uploaded_image:
-            image = Image.open(uploaded_image)
-
-        # Get AI response
-        ai_response = get_data(user_input, image)
-        st.session_state.messages.append({"is_user": False, "content": ai_response})
-    else:
-        st.warning("Please enter a message.")
+            # Get AI response
+            ai_response = get_data(user_input, image)
+            st.session_state.messages.append({"is_user": False, "content": ai_response})
+        else:
+            st.warning("Please enter a message.")
