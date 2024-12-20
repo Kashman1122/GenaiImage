@@ -74,78 +74,79 @@ st.set_page_config(page_title="AI Chat Assistant", layout="wide")
 st.markdown(
     """
     <style>
-        body {
-            background-color: #121212;
-            color: white;
-        }
-        .chat-container {
-            background-color: #1e1e1e;
-            border-radius: 10px;
-            padding: 15px;
-            max-height: 600px;
-            overflow-y: auto;
-            margin-bottom: 20px;
-        }
-        .chat-bubble-user {
-            text-align: right;
-            background-color: #4caf50;
-            color: white;
-            display: inline-block;
-            padding: 10px;
-            border-radius: 15px;
-            margin: 5px 0;
-            max-width: 70%;
-        }
-        .chat-bubble-ai {
-            text-align: left;
-            background-color: #444;
-            color: white;
-            display: inline-block;
-            padding: 10px;
-            border-radius: 15px;
-            margin: 5px 0;
-            max-width: 70%;
-        }
-        .input-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: fixed;
-            bottom: 10px;
-            width: 100%;
-            padding: 10px;
-            background-color: #1e1e1e;
-            border-radius: 10px;
-        }
-        .input-box {
-            flex-grow: 1;
-            padding: 10px;
-            border: none;
-            background-color: #333;
-            color: white;
-            border-radius: 5px;
-            margin-right: 10px;
-        }
-        .input-box:focus {
-            outline: none;
-        }
-        .send-button {
-            border: none;
-            background-color: #4caf50;
-            color: white;
-            border-radius: 5px;
-            padding: 10px;
-            cursor: pointer;
-        }
-        .camera-button {
-            border: none;
-            background-color: #444;
-            color: white;
-            border-radius: 5px;
-            padding: 10px;
-            cursor: pointer;
-            margin-left: 5px;
-        }
+       body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #121212;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+.chat-container {
+  width: 80%;
+  max-width: 800px;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #1e1e1e;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.chat-input-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  background-color: #2c2c2c;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+.camera-button, .send-button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.camera-button {
+  background-color: #4caf50;
+  color: white;
+  margin-right: 5px;
+}
+
+.send-button {
+  background-color: #2196f3;
+  color: white;
+}
+
+.chat-input-area .camera-button:hover {
+  background-color: #45a049;
+}
+
+.chat-input-area .send-button:hover {
+  background-color: #0b7dda;
+}
+
     </style>
     """,
     unsafe_allow_html=True,
